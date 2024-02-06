@@ -328,11 +328,11 @@ defmodule OpenIDConnect do
       {:ok, json}
     else
       {:ok, %Finch.Response{body: response, status: status} = resp} ->
-        Logger.error(resp, label: "Finch error in fetch_userinfo connecting to #{endpoint}")
+        Logger.error(inspect(resp), label: "Finch error in fetch_userinfo connecting to #{endpoint}")
 
         {:error, {status, response}}
       other ->
-        Logger.error(other, label: "Other error connecting to fetch_userfino: #{endpoint}")
+        Logger.error(inspect(other), label: "Other error connecting to fetch_userfino: #{endpoint}")
 
         other
     end
