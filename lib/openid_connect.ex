@@ -191,6 +191,12 @@ defmodule OpenIDConnect do
 
     headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
 
+    endpoint =
+      case Document.fetch_document(discovery_document_uri) do
+        {:ok, document} -> document.userinfo_endpoint
+        _ -> nil
+      end
+
     with {:ok, document} <- Document.fetch_document(discovery_document_uri),
          request = Finch.build(:post, document.token_endpoint, headers, form_body),
          {:ok, %Finch.Response{body: response, status: status}} when status in 200..299 <-
@@ -198,8 +204,14 @@ defmodule OpenIDConnect do
          {:ok, json} <- Jason.decode(response) do
       {:ok, json}
     else
-      {:ok, %Finch.Response{body: response, status: status}} -> {:error, {status, response}}
-      other -> other
+      {:ok, %Finch.Response{body: response, status: status} = resp} ->
+        Logger.error(inspect(resp), label: "Finch error in fetch_tokens connecting to #{endpoint}")
+
+        {:error, {status, response}}
+      other ->
+        Logger.error(inspect(other), label: "Other error connecting to fetch_tokens: #{endpoint}")
+
+        other
     end
   end
 
